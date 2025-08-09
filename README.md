@@ -1,2 +1,2 @@
-# -gomokuagent
+# gomokuagent
 LLM
