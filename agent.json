@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Agent_V1",
+    "agent_class": "gomokuagent.agent_v1.StudentLLMAgent",
+    "author": "Claude",
+    "description": "Basic LLM agent"
+  }
+]
