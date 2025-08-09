@@ -30,7 +30,7 @@ class StudentLLMAgent(Agent):
         self.system_prompt = self._create_system_prompt()
 
         self.llm_client = OpenAIGomokuClient(
-            api_key=userdata.get('GROQ_API_KEY'),  # Fixed key name
+            api_key=userdata.get('Groq_API_A1'), 
             model="gemma2-9b-it",
             endpoint="https://api.groq.com/openai/v1",
         )
