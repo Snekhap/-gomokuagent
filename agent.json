@@ -1,0 +1,6 @@
+{
+    "name": "Agent_V1",
+    "agent_class": "-gomokuagent.agent_v1",
+    "author": "Claude",
+    "description": "This is a simple agent"
+}
