@@ -1,29 +1,39 @@
 import re
 import json
+import random
+import asyncio
+from typing import Tuple
 from gomoku import Agent
 from gomoku.llm import OpenAIGomokuClient
-from gomoku.core.models import Player
+from gomoku.core.models import Player, GameState
+
+# Add this if userdata is from Colab
+try:
+    from google.colab import userdata
+except ImportError:
+    import os
+    class userdata:
+        @staticmethod
+        def get(key):
+            return os.environ.get(key)
 
 class StudentLLMAgent(Agent):
     """An educational LLM agent that students will build step by step."""
 
-    def init(self, agent_id: str):
-        super().init(agent_id)
+    def __init__(self, agent_id: str):
+        super().__init__(agent_id)
+        self._setup()
         print(f"🎓 Created StudentLLMAgent: {agent_id}")
 
     def _setup(self):
         """Setup our LLM client and prompts."""
-
-        # We'll add the LLM client setup here
-        # For now, let's define our system prompt
         self.system_prompt = self._create_system_prompt()
 
         self.llm_client = OpenAIGomokuClient(
-            api_key=userdata.get('Groq_API_l1'),
+            api_key=userdata.get('GROQ_API_KEY'),  # Fixed key name
             model="gemma2-9b-it",
             endpoint="https://api.groq.com/openai/v1",
         )
-
 
     def _create_system_prompt(self) -> str:
         """Create the system prompt that teaches the LLM how to play Gomoku."""
@@ -52,28 +62,6 @@ CRITICAL ANALYSIS FRAMEWORK - Always follow this order:
    - BUILD CONNECTED STRUCTURES: Don't scatter pieces randomly
    - FORCE OPPONENT TO DEFEND: Make threats they must respond to
 
-ADVANCED PATTERN RECOGNITION:
-- Count sequences: Look for your 2s, 3s, 4s and opponent's
-- Identify WEAK SPOTS: Where can you break their formations?
-- Find INTERSECTION POINTS: Moves that serve multiple purposes
-
-OPENING STRATEGY:
-- First move: Always center (3,3) or (4,4)
-- Second move: Adjacent to center or create diagonal
-- Build toward multiple directions from strong positions
-
-DEFENSIVE PRIORITIES:
-1. Block immediate wins (their 4-in-a-row)
-2. Block double threats (their two 3-in-a-rows)
-3. Block open threes (.XXX.)
-4. Contest strong positions
-
-BOARD READING GUIDE:
-- Your pieces: X
-- Opponent pieces: O  
-- Empty spaces: .
-- Coordinates: (0,0) is top-left, (7,7) is bottom-right
-
 RESPONSE FORMAT - You MUST respond with valid JSON:
 {
     "analysis": "Detailed step-by-step analysis following the framework above",
@@ -82,14 +70,6 @@ RESPONSE FORMAT - You MUST respond with valid JSON:
     "row": <number>,
     "col": <number>
 }
-
-WINNING MINDSET: 
-- Think 2-3 moves ahead
-- Every move should either threaten victory or prevent defeat
-- Force your opponent into reactive play
-- Create complexity where you have the advantage
-
-Remember: In Gomoku, the player who controls the initiative usually wins. Make moves that put pressure on your opponent!
 """.strip()
 
     async def get_move(self, game_state: GameState) -> Tuple[int, int]:
@@ -97,12 +77,10 @@ Remember: In Gomoku, the player who controls the initiative usually wins. Make m
         print(f"\n{self.agent_id} is thinking...")
 
         try:
-
-            board_str = self._create_enhanced_board_representation(game_state)
+            board_str = self._create_board_representation(game_state)
             
             # Add game context
             move_count = len(game_state.move_history)
-            game_phase = self._determine_game_phase(move_count)
             
             # Create comprehensive prompt
             user_prompt = f"""
@@ -112,11 +90,7 @@ CURRENT GAME SITUATION:
 GAME CONTEXT:
 - Move #{move_count + 1}
 - You are player: {game_state.current_player.value}
-- Game phase: {game_phase}
 - Legal moves available: {len(game_state.get_legal_moves())}
-
-RECENT MOVES:
-{self._format_recent_moves(game_state)}
 
 Apply the strategic framework step by step and provide your best move as JSON.
 """
@@ -140,10 +114,27 @@ Apply the strategic framework step by step and provide your best move as JSON.
                     return (row, col)
 
         except Exception as e:
-            print(e)
+            print(f"Error: {e}")
 
         return self._get_fallback_move(game_state)
 
+    def _create_board_representation(self, game_state: GameState) -> str:
+        """Create a string representation of the board."""
+        # This is a placeholder - implement based on your GameState structure
+        board = game_state.board
+        board_str = ""
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                if board[i][j] == Player.X:
+                    board_str += "X "
+                elif board[i][j] == Player.O:
+                    board_str += "O "
+                else:
+                    board_str += ". "
+            board_str += "\n"
+        return board_str
+
     def _get_fallback_move(self, game_state: GameState) -> Tuple[int, int]:
         """Simple fallback when LLM fails."""
-        return random.choice(game_state.get_legal_moves())
+        legal_moves = game_state.get_legal_moves()
+        return random.choice(legal_moves)
