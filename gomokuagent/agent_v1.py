@@ -29,11 +29,21 @@ class StudentLLMAgent(Agent):
         """Setup our LLM client and prompts."""
         self.system_prompt = self._create_system_prompt()
 
-        self.llm_client = OpenAIGomokuClient(
-            api_key=userdata.get('Groq_API_l1'), 
-            model="gemma2-9b-it",
-            endpoint="https://api.groq.com/openai/v1",
-        )
+        try:
+            api_key = userdata.get('Groq_API_l1')  # Fixed to match your actual key name
+            if not api_key:
+                print("WARNING: Groq_API_l1 not found, using fallback mode")
+                self.llm_client = None
+                return
+                
+            self.llm_client = OpenAIGomokuClient(
+                api_key=api_key,
+                model="gemma2-9b-it",
+                endpoint="https://api.groq.com/openai/v1",
+            )
+        except Exception as e:
+            print(f"Error setting up LLM client: {e}")
+            self.llm_client = None
 
     def _create_system_prompt(self) -> str:
         """Create the system prompt that teaches the LLM how to play Gomoku."""
@@ -75,6 +85,11 @@ RESPONSE FORMAT - You MUST respond with valid JSON:
     async def get_move(self, game_state: GameState) -> Tuple[int, int]:
         """Main method: Get the next move from our LLM."""
         print(f"\n{self.agent_id} is thinking...")
+
+        # Fallback to random if no LLM client
+        if not self.llm_client:
+            print("No LLM client available, using random move")
+            return self._get_fallback_move(game_state)
 
         try:
             board_str = self._create_board_representation(game_state)
