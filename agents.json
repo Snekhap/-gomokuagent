@@ -1,16 +1,14 @@
-{
-  "agents": [
-    {
-      "name": "Agent_V1",
-      "agent_class": "gomokuagent.agent_v1.StudentLLMAgent",
-      "author": "V1",
-      "description": "Basic LLM agent"
-    },
-    {
-      "name": "Agent_V2",
-      "agent_class": "gomokuagent.agent_v2.AdvancedLLMAgent",
-      "author": "V2",
-      "description": "Advanced LLM agent with better strategy and fallbacks"
-    }
-  ]
-}
+[
+  {
+    "name": "Agent_V1",
+    "agent_class": "gomokuagent.agent_v1.StudentLLMAgent",
+    "author": "Claude",
+    "description": "Basic LLM agent"
+  },
+  {
+    "name": "Agent_V2",
+    "agent_class": "gomokuagent.agent_v2.AdvancedLLMAgent",
+    "author": "Claude",
+    "description": "Advanced LLM agent"
+  }
+]
